@@ -13,10 +13,9 @@
 
 #include <QObject>
 
-#include <VBase>
 #include <VError>
-#include <VState>
-#include <VXml>
+#include <VSerializable>
+#include <VLog>
 
 // ----------------------------------------------------------------------------
 // VObjectConnection
@@ -48,18 +47,24 @@ class VObjectConnections : public QList<VObjectConnection>
 // ----------------------------------------------------------------------------
 class VObject :
   public QObject,
-  public VXmlable
+  public VSerializable
 {
   Q_OBJECT
 
+public:
+  //
+  // constructor and destructor
+  //
 public:
   void* owner;
 
 public:
   VObject(void* owner = NULL);
+  VObject(const VObject& rhs) : QObject(NULL) { Q_UNUSED(rhs) }
   virtual ~VObject();
 
 public:
+
   VObjectConnections connections;
   static bool connect(QObject* sender, const char* signal, QObject* receiver, const char* slot, Qt::ConnectionType type = Qt::AutoConnection);
   static bool connect(QObject *sender, const QMetaMethod &signal, QObject *receiver, const QMetaMethod &slot, Qt::ConnectionType type = Qt::AutoConnection);
@@ -67,12 +72,76 @@ public:
   static bool disconnect(QObject *sender, const QMetaMethod &signal, QObject *receiver, const QMetaMethod &slot);
   static QMetaMethod findMethod(QObject* object, QString methodName);
 
-public:
-  QString className() { return this->metaObject()->className(); }
+protected:
+  VState m_state;
 
 public:
-  virtual void load(VXml xml);
-  virtual void save(VXml xml);
+  int     tag; // used for debugging
+  VState  state()     { return m_state;                   }
+  QString className() { return this->metaObject()->className(); }
+  bool    active()    { return m_state == VState::Opened; }
+
+  //
+  // error
+  //
+public:
+  VError error;
+
+  //
+  // open and close
+  //
+public slots:
+  virtual bool open();
+  virtual bool close();
+
+public:
+  virtual bool close(bool wait, VTimeout timeout = VBase::TIMEOUT);
+  virtual bool wait(VTimeout timeout = VBase::TIMEOUT);
+
+protected:
+  virtual bool doOpen();
+  virtual bool doClose();
+
+signals:
+  void opened();
+  void closed();
+
+  //
+  // load and save
+  //
+public:
+  virtual void load(VRep& rep);
+  virtual void save(VRep& rep);
+
+#ifdef QT_GUI_LIB
+public:
+  virtual QWidget* createWidget(QWidget* parent);
+  virtual void createTreeWidgetItems(VTreeWidgetItem* parent);
+
+public slots:
+  void objectNameEditingFinished();
+  void textEditingFinished();
+  void boolStateChanged(int state);
+  void enumCurrentIndexChanged(int index);
+  void pbAddClicked();
+  void pbDelClicked();
+#endif // QT_GUI_LIB
+};
+Q_DECLARE_METATYPE(VObject*)
+
+class VObjectList : public QList<VObject*>
+{
+public:
+  virtual VObject* createObject() { return new VObject; }
+  virtual ~VObjectList() {}
+};
+Q_DECLARE_METATYPE(VObjectList*)
+
+template <class T>
+class _VObjectList : public VObjectList
+{
+public:
+  virtual VObject* createObject() { return new T; }
 };
 
 #endif // __V_OBJECT_H__

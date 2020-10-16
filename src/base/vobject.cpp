@@ -1,4 +1,3 @@
-#include <VLog>
 #include <VObject>
 #include <VDebugNew>
 
@@ -33,10 +32,17 @@ bool VObjectConnection::operator == (const VObjectConnection& r) const
 VObject::VObject(void* owner) : QObject((QObject*)owner) // gilgil temp 2012.05.29
 {
   this->owner = owner;
+  m_state     = VState::Closed;
+  tag         = 0;
+  error.clear();
 }
 
 VObject::~VObject()
 {
+  if (m_state != VState::Closed)
+  {
+    LOG_FATAL("%s close must be called in descendant of VObject(state=%s) %p", qPrintable(objectName()), qPrintable(m_state.str()), this);
+  }
 }
 
 bool VObject::connect(QObject* sender, const char* signal, QObject* receiver, const char* slot, Qt::ConnectionType type)
@@ -118,12 +124,91 @@ QMetaMethod VObject::findMethod(QObject* object, QString methodName)
   return blankMethod;
 }
 
-void VObject::load(VXml xml)
+bool VObject::open()
 {
-  Q_UNUSED(xml) // gilgil temp 2015.01.29
+  if (m_state != VState::Closed)
+  {
+    SET_ERROR(VError, QString("not closed state(%1) %2 %3").arg(m_state.str()).arg(className()).arg(objectName()), VError::NOT_CLOSED_STATE);
+    return false;
+  }
+
+  if (objectName() == "") setObjectName(className());
+  m_state = VState::Opening;
+  tag     = 0;
+  error.clear();
+
+  bool res = doOpen();
+
+  if (!res)
+  {
+    doClose();
+    m_state = VState::Closed;
+    return false;
+  }
+
+  m_state = VState::Opened;
+  emit opened();
+  return true;
 }
 
-void VObject::save(VXml xml)
+bool VObject::close()
+{
+  if (m_state != VState::Opened)
+  {
+    return false; // no action
+  }
+
+  m_state = VState::Closing;
+
+  bool res = doClose();
+
+  if (!res)
+  {
+    // m_state = VState::Closed; // do not change state if doClose() return false;
+    return false;
+  }
+
+  m_state = VState::Closed;
+  emit closed();
+  return true;
+}
+
+bool VObject::close(bool wait, VTimeout timeout)
+{
+  bool res = close();
+  if (res && wait)
+    res = this->wait(timeout);
+  return res;
+}
+
+bool VObject::wait(VTimeout timeout)
+{
+  Q_UNUSED(timeout);
+  return true;
+}
+
+bool VObject::doOpen()
+{
+  SET_ERROR(VError, QString("virtual function call %1 %2").arg(className()).arg(objectName()), VError::VIRTUAL_FUNCTION_CALL);
+  LOG_FATAL("virtual function call error %s %s", qPrintable(className()), qPrintable(objectName()));
+  return false;
+}
+
+bool VObject::doClose()
+{
+  SET_ERROR(VError, QString("virtual function call %1 %2").arg(className()).arg(objectName()), VError::VIRTUAL_FUNCTION_CALL);
+  LOG_FATAL("virtual function call error %s %s", qPrintable(className()), qPrintable(objectName()));
+  return false;
+}
+
+void VObject::load(VRep& rep)
+{
+  Q_UNUSED(xml) // gilgil temp 2015.01.29
+  // name = xml.getStr("name", name); // gilgil temp 2015.01.29
+}
+
+void VObject::save(VRep& rep)
 {
   xml.setStr("_class", className());
+  // if (name != "" && name != className()) xml.setStr("name", name); // gilgil temp 2015.01.29
 }
