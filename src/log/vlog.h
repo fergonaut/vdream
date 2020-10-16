@@ -11,9 +11,15 @@
 #ifndef __V_LOG_H__
 #define __V_LOG_H__
 
+<<<<<<< HEAD:src/log/vlog.h
 // #include <VBase> // gilgil temp 2015.02.01
 // #include <VMetaClass> // gilgil temp 2015.02.01
 #include <VObject>
+=======
+#include <VBase>
+#include <VMetaClass>
+#include <VSerializable>
+>>>>>>> issue12:include/log/vlog.h
 
 // ----------------------------------------------------------------------------
 // VShowDateTime
@@ -41,7 +47,11 @@ public:
   QString str() const;
 };
 
+<<<<<<< HEAD:src/log/vlog.h
 class VLog : public VObject
+=======
+class VLog : public VSerializable
+>>>>>>> issue12:include/log/vlog.h
 {
   Q_OBJECT
 
@@ -123,8 +133,8 @@ public:
   // XML
   //
 public:
-  virtual void load(VXml xml);
-  virtual void save(VXml xml);
+  virtual void load(VRep& rep);
+  virtual void save(VRep& rep);
 
   //
   // Global

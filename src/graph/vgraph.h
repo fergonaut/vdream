@@ -18,7 +18,11 @@
 // VGraphObjectList
 // ----------------------------------------------------------------------------
 class VGraph;
+<<<<<<< HEAD:src/graph/vgraph.h
 class VGraphObjectList : public QList<VStateObject*>, public VXmlable
+=======
+class VGraphObjectList : public QList<VObject*>, public VSerializable
+>>>>>>> issue12:include/graph/vgraph.h
 {
 protected:
   VGraph* m_graph;
@@ -45,14 +49,14 @@ public:
   QStringList findObjectNamesByCategoryName(QString categoryName);
 
 public:
-  virtual void load(VXml xml);
-  virtual void save(VXml xml);
+  virtual void load(VRep& rep);
+  virtual void save(VRep& rep);
 };
 
 // ----------------------------------------------------------------------------
 // VGraphConnect
 // ----------------------------------------------------------------------------
-class VGraphConnect : public VXmlable
+class VGraphConnect : public VSerializable
 {
 public:
   VGraphConnect();
@@ -68,14 +72,14 @@ public:
   bool operator == (const VGraphConnect& rhs);
 
 public:
-  virtual void load(VXml xml);
-  virtual void save(VXml xml);
+  virtual void load(VRep& rep);
+  virtual void save(VRep& rep);
 };
 
 // ----------------------------------------------------------------------------
 // VGraphConnectList
 // ----------------------------------------------------------------------------
-class VGraphConnectList : public QList<VGraphConnect>, public VXmlable
+class VGraphConnectList : public QList<VGraphConnect>, public VSerializable
 {
 protected:
   VGraph* m_graph;
@@ -92,8 +96,8 @@ public:
   bool delConnect(VGraphConnect connect);
 
 public:
-  virtual void load(VXml xml);
-  virtual void save(VXml xml);
+  virtual void load(VRep& rep);
+  virtual void save(VRep& rep);
 };
 
 // ----------------------------------------------------------------------------
@@ -119,14 +123,19 @@ public:
   VGraphConnectList connectList;
 
 protected:
+<<<<<<< HEAD:src/graph/vgraph.h
   static QStringList methodList(VStateObject* object, QMetaMethod::MethodType methodType);
+=======
+  static QStringList methodList(VObject* object, QMetaMethod::MethodType methodType);
+
+>>>>>>> issue12:include/graph/vgraph.h
 public:
   static QStringList signalList(VStateObject* object);
   static QStringList slotList(VStateObject* object);
 
 public:
-  virtual void load(VXml xml);
-  virtual void save(VXml xml);
+  virtual void load(VRep& rep);
+  virtual void save(VRep& rep);
 };
 
 #endif // __V_GRAPH_H__

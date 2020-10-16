@@ -114,17 +114,19 @@ QStringList VGraphObjectList::findObjectNamesByCategoryName(QString categoryName
   return res;
 }
 
-void VGraphObjectList::load(VXml xml)
+#include <QMetaType>
+void VGraphObjectList::load(VRep& rep)
 {
   clear();
-  xml_foreach (childXml, xml.childs())
+  foreach (const VRep& childRep, rep.childs())
   {
-    QString className = childXml.getStr("_class");
+    QString className = childRep["_class"].toString();
     if (className == "")
     {
       LOG_ERROR("_class is null");
       return;
     }
+<<<<<<< HEAD:src/graph/vgraph.cpp
     VStateObject* obj = dynamic_cast<VStateObject*>(VFactory::instance().createObjectByClassName(className));
     if (obj == NULL)
     {
@@ -133,18 +135,35 @@ void VGraphObjectList::load(VXml xml)
     obj->owner = this->m_graph;
     obj->load(childXml);
     this->push_back(obj);
+=======
+    VObject* object = (VObject*)VFactory::instance().createByClassName(className);
+    if (object == NULL)
+    {
+      LOG_ERROR("can not create instance for %s", qPrintable(className));
+    }
+    object->owner = this->m_graph;
+    object->load((VRep&)childRep);
+    this->push_back(object);
+>>>>>>> issue12:include/graph/vgraph.cpp
   }
 }
 
-void VGraphObjectList::save(VXml xml)
+void VGraphObjectList::save(VRep& rep)
 {
-  xml.clearChild();
+  rep.clearChilds();
   int _count = this->count();
   for (int i = 0; i < _count; i++)
   {
+<<<<<<< HEAD:src/graph/vgraph.cpp
     VStateObject* obj = this->at(i);
     VXml childXml = xml.addChild("object");
     obj->save(childXml);
+=======
+    VObject* object = this->at(i);
+    VRep childRep;
+    object->save(childRep);
+    rep.insert(QString("object") + QString::number(i), childRep);
+>>>>>>> issue12:include/graph/vgraph.cpp
   }
 }
 
@@ -172,20 +191,20 @@ bool VGraphConnect::operator == (const VGraphConnect& rhs)
   return true;
 }
 
-void VGraphConnect::load(VXml xml)
+void VGraphConnect::load(VRep& rep)
 {
-  sender   = xml.getStr("sender",   sender);
-  signal   = xml.getStr("signal",   signal);
-  receiver = xml.getStr("receiver", receiver);
-  slot     = xml.getStr("slot",     slot);
+  sender   = rep.getStr("sender",   sender);
+  signal   = rep.getStr("signal",   signal);
+  receiver = rep.getStr("receiver", receiver);
+  slot     = rep.getStr("slot",     slot);
 }
 
-void VGraphConnect::save(VXml xml)
+void VGraphConnect::save(VRep& rep)
 {
-  xml.setStr("sender",   sender);
-  xml.setStr("signal",   signal);
-  xml.setStr("receiver", receiver);
-  xml.setStr("slot",     slot);
+  rep.setStr("sender",   sender);
+  rep.setStr("signal",   signal);
+  rep.setStr("receiver", receiver);
+  rep.setStr("slot",     slot);
 }
 
 // ----------------------------------------------------------------------------
@@ -270,10 +289,10 @@ bool VGraphConnectList::delConnect(VGraphConnect connect)
   return true;
 }
 
-void VGraphConnectList::load(VXml xml)
+void VGraphConnectList::load(VRep& rep)
 {
   clear();
-  xml_foreach (childXml, xml.childs())
+  xml_foreach (childXml, rep.childs())
   {
     VGraphConnect connect;
     connect.load(childXml);
@@ -281,14 +300,14 @@ void VGraphConnectList::load(VXml xml)
   }
 }
 
-void VGraphConnectList::save(VXml xml)
+void VGraphConnectList::save(VRep& rep)
 {
-  xml.clearChild();
+  rep.clearChild();
   int _count = this->count();
   for (int i = 0; i < _count; i++)
   {
     VGraphConnect connect = at(i);
-    connect.save(xml.addChild("connect"));
+    connect.save(rep.addChild("connect"));
   }
 }
 
@@ -378,14 +397,14 @@ QStringList VGraph::slotList(VStateObject *object)
   return methodList(object, QMetaMethod::Slot);
 }
 
-void VGraph::load(VXml xml)
+void VGraph::load(VRep& rep)
 {
-  objectList.load(xml.gotoChild("objectList"));
-  connectList.load(xml.gotoChild("connectList"));
+  objectList.load(rep.gotoChild("objectList"));
+  connectList.load(rep.gotoChild("connectList"));
 }
 
-void VGraph::save(VXml xml)
+void VGraph::save(VRep& rep)
 {
-  objectList.save(xml.gotoChild("objectList"));
-  connectList.save(xml.gotoChild("connectList"));
+  objectList.save(rep.gotoChild("objectList"));
+  connectList.save(rep.gotoChild("connectList"));
 }
