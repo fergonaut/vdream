@@ -8,17 +8,17 @@
 //
 // ----------------------------------------------------------------------------
 
-#ifndef __V_LOG_H__
-#define __V_LOG_H__
+ifndef __V_LOG_H__
+define __V_LOG_H__
 
 <<<<<<< HEAD:src/log/vlog.h
-// #include <VBase> // gilgil temp 2015.02.01
-// #include <VMetaClass> // gilgil temp 2015.02.01
-#include <VObject>
+// #include <VBase> // gilgil temp 2015.02.01 
+/* // #include <VMetaClass> // gilgil temp 2015.02.01 */
+include <VObject>
 =======
-#include <VBase>
-#include <VMetaClass>
-#include <VSerializable>
+include <VBase>
+/* include <VMetaClass> */
+include <VSerializable>
 >>>>>>> issue12:include/log/vlog.h
 
 // ----------------------------------------------------------------------------
